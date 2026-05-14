@@ -1,0 +1,88 @@
+# ━━━ Python ━━━
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+
+# ━━━ Build artifacts ━━━
+build/
+dist/
+wheels/
+share/python-wheels/
+site/
+
+# ━━━ Tools cache ━━━
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.tox/
+.nox/
+.cache/
+.hatch/
+
+# ━━━ Coverage ━━━
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+htmlcov/
+
+# ━━━ Virtual envs ━━━
+.venv/
+venv/
+env/
+ENV/
+
+# ━━━ Vulpcode runtime (sessions, history, user config with secrets) ━━━
+.vulpcode/
+
+# ━━━ Development logs (runtime output of dev/prompt.sh) ━━━
+dev/LOG/
+dev/DOCUMENTACAO/LOG/
+
+# ━━━ Notebooks ━━━
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# ━━━ Secrets / credentials — NEVER commit ━━━
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.crt
+secrets.toml
+secrets/
+credentials/
+config.local.toml
+config.local.*
+
+# ━━━ Logs ━━━
+*.log
+logs/
+
+# ━━━ IDE / editor ━━━
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ━━━ OS ━━━
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+

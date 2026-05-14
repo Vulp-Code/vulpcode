@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <!-- Cabeca de raposa simplificada (legivel a 16-32px) -->
+  <path d="M128 32 L208 96 L168 192 L128 224 L88 192 L48 96 Z"
+        fill="#673AB7"/>
+  <!-- Orelhas -->
+  <path d="M48 96 L72 32 L96 80 Z" fill="#FF5722"/>
+  <path d="M208 96 L184 32 L160 80 Z" fill="#FF5722"/>
+  <!-- Olhos (maiores p/ favicon) -->
+  <circle cx="100" cy="124" r="14" fill="#fff"/>
+  <circle cx="156" cy="124" r="14" fill="#fff"/>
+  <!-- Prompt > -->
+  <path d="M96 196 L128 172 L96 148"
+        stroke="#fff" stroke-width="14" stroke-linecap="round"
+        stroke-linejoin="round" fill="none"/>
+</svg>

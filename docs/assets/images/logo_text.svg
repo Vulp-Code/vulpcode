@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 256" fill="none">
+  <!-- Icone (copia do logo.svg) -->
+  <g>
+    <path d="M128 32 L208 96 L168 192 L128 224 L88 192 L48 96 Z"
+          fill="#673AB7"/>
+    <path d="M48 96 L72 32 L96 80 Z" fill="#FF5722"/>
+    <path d="M208 96 L184 32 L160 80 Z" fill="#FF5722"/>
+    <path d="M64 80 L78 48 L88 76 Z" fill="#673AB7"/>
+    <path d="M192 80 L178 48 L168 76 Z" fill="#673AB7"/>
+    <circle cx="100" cy="120" r="9" fill="#fff"/>
+    <circle cx="156" cy="120" r="9" fill="#fff"/>
+    <circle cx="100" cy="120" r="4" fill="#1A1A1A"/>
+    <circle cx="156" cy="120" r="4" fill="#1A1A1A"/>
+    <path d="M128 148 L114 172 L142 172 Z" fill="#fff"/>
+    <path d="M104 200 L122 186 L104 172"
+          stroke="#fff" stroke-width="7" stroke-linecap="round"
+          stroke-linejoin="round" fill="none"/>
+    <path d="M134 202 L154 202"
+          stroke="#FF5722" stroke-width="7" stroke-linecap="round" fill="none"/>
+  </g>
+  <!-- Wordmark "vulpcode" -->
+  <text x="276" y="160"
+        font-family="JetBrains Mono, Menlo, Consolas, monospace"
+        font-size="108"
+        font-weight="700"
+        fill="#673AB7">vulp<tspan fill="#FF5722">code</tspan></text>
+</svg>

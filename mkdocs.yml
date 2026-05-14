@@ -1,0 +1,186 @@
+site_name: Vulpcode
+site_description: Terminal coding agent — multi-provider, agentic, written in Python.
+site_author: Vulpcode Authors
+site_url: https://vulpcode.readthedocs.io/
+
+repo_name: vulpcode/vulpcode
+repo_url: https://github.com/vulpcode/vulpcode
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2026 Vulpcode Authors
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Modo claro
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.integrate
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
+
+plugins:
+  - search:
+      lang:
+        - pt
+        - en
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            show_root_heading: true
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            merge_init_into_class: true
+            members_order: source
+            show_if_no_docstring: false
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vulpcode/vulpcode
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/vulpcode/
+
+# A nav e ATUALIZADA INCREMENTALMENTE pelas tarefas seguintes.
+nav:
+  - Home: index.md
+  - Comece aqui:
+      - getting-started/index.md
+      - Instalacao: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+      - Primeira configuracao: getting-started/first-config.md
+      - Conceitos principais: getting-started/core-concepts.md
+  - Guia do Usuario:
+      - user-guide/index.md
+      - Usando o REPL: user-guide/using-the-repl.md
+      - Slash commands: user-guide/slash-commands.md
+      - Modos de permissao: user-guide/permission-modes.md
+      - Sessoes e historico: user-guide/sessions.md
+  - Providers:
+      - providers/index.md
+      - Anthropic (Claude): providers/anthropic.md
+      - OpenAI e compatibles: providers/openai-family.md
+      - Gemini: providers/gemini.md
+      - Ollama: providers/ollama.md
+      - Endpoint corporativo: providers/internal-llm.md
+      - Trocar em runtime: providers/switching-at-runtime.md
+  - Tools:
+      - tools/index.md
+      - Filesystem: tools/filesystem.md
+      - Busca e Shell: tools/search-and-shell.md
+      - Agente: tools/agent.md
+      - Web: tools/web.md
+  - Configuracao:
+      - configuration/index.md
+      - config.toml: configuration/config-toml.md
+      - Variaveis de ambiente: configuration/env-vars.md
+      - Permissoes (avancado): configuration/permissions.md
+  - Receitas:
+      - recipes/index.md
+      - Revisar PR: recipes/review-pr.md
+      - Refatorar codigo: recipes/refactor-code.md
+      - Escrever testes: recipes/write-tests.md
+      - Debugar bug: recipes/debug-bug.md
+      - Gerar documentacao: recipes/generate-docs.md
+      - Offline com Ollama: recipes/offline-with-ollama.md
+  - MCP: mcp/index.md
+  - Arquitetura:
+      - architecture/index.md
+      - Agent loop: architecture/agent-loop.md
+      - Streaming: architecture/streaming.md
+      - Provider translation: architecture/provider-translation.md
+      - Tool registry: architecture/tool-registry.md
+  - API Reference:
+      - api/index.md
+      - Providers: api/providers.md
+      - Tools: api/tools.md
+      - Agent: api/agent.md
+      - Permissions: api/permissions.md
+      - Config: api/config.md
+      - Session: api/session.md
+      - MCP: api/mcp.md
+  - Contributing:
+      - contributing/index.md
+      - Setup de desenvolvimento: contributing/dev-setup.md
+      - Convencoes de codigo: contributing/code-conventions.md
+      - Adicionar provider: contributing/add-provider.md
+      - Adicionar tool: contributing/add-tool.md

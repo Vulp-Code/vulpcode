@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.1] - 2026-05-14
+
+- Expanded English README with installation, providers table, tools table,
+  slash commands, permission modes, MCP example, and contributing guide.
+- No functional changes.
+
 ## [0.1.0] - 2026-05-06
 
 Initial release. Multi-provider terminal coding agent with:

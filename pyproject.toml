@@ -62,9 +62,9 @@ vulp = "vulpcode.cli:main"
 vulpcode = "vulpcode.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/vulpcode/vulpcode"
-Repository = "https://github.com/vulpcode/vulpcode"
-Issues = "https://github.com/vulpcode/vulpcode/issues"
+Homepage = "https://github.com/Vulp-Code/vulpcode"
+Repository = "https://github.com/Vulp-Code/vulpcode"
+Issues = "https://github.com/Vulp-Code/vulpcode/issues"
 
 # HATCH
 [tool.hatch.version]

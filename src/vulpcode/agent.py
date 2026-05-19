@@ -1,6 +1,7 @@
 """Agent loop: LLM <-> tools."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import AsyncIterator, Union
 
@@ -13,6 +14,39 @@ from vulpcode.providers.base import (
     Usage,
 )
 from vulpcode.tools.base import Tool, ToolResult
+
+
+_PHANTOM_COMMIT_RE = re.compile(
+    r"\b("
+    r"vou\s+\w+|"
+    r"vamos\s+\w+|"
+    r"deixa\s+(?:eu|que\s+eu)|"
+    r"let\s+me\s+\w+|"
+    r"i['’]?ll\s+\w+|"
+    r"i\s+will\s+\w+|"
+    r"i['’]?m\s+going\s+to|"
+    r"going\s+to\s+\w+"
+    r")\b",
+    re.IGNORECASE,
+)
+
+_PHANTOM_NUDGE = (
+    "REMINDER: você descreveu uma ação mas não invocou nenhuma ferramenta. "
+    "Invoque a ferramenta apropriada agora, no formato exato do protocolo, "
+    "sem mais prosa. (If you cannot, explain explicitly what is blocking you.)"
+)
+
+
+def _looks_like_phantom_commit(text: str) -> bool:
+    """Heuristic: assistant text promises an action but no tool was called.
+
+    Used to nudge the model when its turn ends with "I'll read X" / "vou ler X"
+    style prose and no tool call — common with weaker models on the agentic
+    text-protocol provider.
+    """
+    if not text or not text.strip():
+        return False
+    return bool(_PHANTOM_COMMIT_RE.search(text))
 
 
 @dataclass
@@ -256,6 +290,7 @@ class Agent:
             One :data:`Event` at a time, in causal order.
         """
         self._messages.append(Message(role="user", content=user_input))
+        phantom_nudge_used = False
         for _ in range(self._max_iters):
             text_buffer = ""
             tool_calls: list[ToolCall] = []
@@ -302,6 +337,15 @@ class Agent:
             )
 
             if not tool_calls:
+                if (
+                    not phantom_nudge_used
+                    and _looks_like_phantom_commit(text_buffer)
+                ):
+                    phantom_nudge_used = True
+                    self._messages.append(
+                        Message(role="user", content=_PHANTOM_NUDGE)
+                    )
+                    continue
                 yield TurnEndEvent(stop_reason or "end_turn")
                 return
 

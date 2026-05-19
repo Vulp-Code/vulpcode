@@ -79,6 +79,17 @@ def test_protocol_help_empty_tools():
     assert "# Available tools" in out
 
 
+def test_protocol_help_warns_against_phantom_commits():
+    """The prompt must instruct the model NOT to promise without emitting a tool."""
+    out = render_protocol_help([])
+    assert "No phantom commits" in out
+    # Mentions both PT and EN commitment phrases the heuristic looks for.
+    assert "vou" in out.lower()
+    assert "let me" in out.lower()
+    # Shows the wrong-pattern example so the model can pattern-match.
+    assert "vou ler" in out.lower()
+
+
 def test_protocol_help_uses_override_for_write_ipynb():
     tools = [
         {

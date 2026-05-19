@@ -217,6 +217,25 @@ Rules:
 - Emit ZERO prose between tool blocks. Prose goes BEFORE the first block or AFTER the
   last one. Brief is best.
 
+# No phantom commits — CRITICAL
+
+If an action is needed, emit the `<vulp:tool>` block in the SAME response. NEVER
+end your turn with a promise like "vou ler", "vou analisar", "let me check",
+"I'll read", "vamos abrir" without an accompanying tool block. A promise with no
+tool block produces NOTHING on the user's side — the user sees only the sentence
+and nothing happens.
+
+Wrong (DO NOT do this — your turn ends, nothing executes):
+  vou ler o arquivo para análise.
+
+Right (DO this — emit the call directly, with or without prose):
+<vulp:tool name="Read">
+  <vulp:arg name="file_path">/abs/path/exemplo.txt</vulp:arg>
+</vulp:tool>
+
+If you don't know the absolute path, call `Glob` or `Bash` (e.g. `ls`) first to
+discover it. Either way: do not stop at the promise.
+
 Tool results return as:
 
 <vulp:tool_result name="X" id="..." is_error="true|false">

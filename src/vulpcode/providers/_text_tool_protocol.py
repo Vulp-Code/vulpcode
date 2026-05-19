@@ -192,6 +192,59 @@ def render_tool_result(
     )
 
 
+def render_cached_tool_result(
+    *,
+    name: str,
+    call_id: str,
+    is_error: bool,
+    preview_body: str,
+    full_size: int,
+    line_count: int,
+) -> str:
+    """Render a ``<vulp:tool_result cached="true" ...>`` envelope.
+
+    Used by the agentic provider when a tool result body exceeds the preview
+    threshold: full body lives in the ContentStore, the model sees only a
+    head+tail preview and is reminded that ``Retrieve(cache_id=...)`` can fetch
+    any slice on demand.
+    """
+    flag = "true" if is_error else "false"
+    return (
+        f'<vulp:tool_result name="{name}" id="{call_id}" is_error="{flag}" '
+        f'cached="true" full_size_chars="{full_size}" total_lines="{line_count}">\n'
+        f"{preview_body}\n"
+        f"\n[full content cached as cache_id={call_id!r}. "
+        f"Fetch any slice with Retrieve(cache_id={call_id!r}, "
+        f"start_line=..., end_line=...) or Retrieve(cache_id={call_id!r}, "
+        f"pattern=\"...\"). Do NOT re-run the original tool.]\n"
+        f"</vulp:tool_result>"
+    )
+
+
+def make_preview(
+    body: str,
+    *,
+    head_lines: int = 40,
+    tail_lines: int = 10,
+) -> str:
+    """Return a compact head+tail preview of ``body`` separated by a marker.
+
+    When the body is short enough to fit both head and tail without overlap,
+    the original text is returned unchanged.
+    """
+    lines = body.splitlines()
+    if len(lines) <= head_lines + tail_lines:
+        return body
+    omitted = len(lines) - head_lines - tail_lines
+    head = "\n".join(lines[:head_lines])
+    tail = "\n".join(lines[-tail_lines:])
+    return (
+        f"{head}\n"
+        f"\n... [{omitted} middle line(s) omitted — use Retrieve to see them] ...\n\n"
+        f"{tail}"
+    )
+
+
 _PROMPT_TEMPLATE = """\
 # Tool calling protocol
 
@@ -241,6 +294,65 @@ Tool results return as:
 <vulp:tool_result name="X" id="..." is_error="true|false">
 ... body / error message ...
 </vulp:tool_result>
+
+# Exploring a project — CRITICAL when context is limited
+
+This endpoint has a tight 128k-token input window. NEVER try to dump a whole
+project into context. Explore in layers, from cheap to expensive:
+
+1. **Structure first.** Run `Tree` on the project root (or use `Glob '**/*'`
+   with a filter) BEFORE reading any file. You get the layout in a few hundred
+   lines; you'd otherwise spend thousands of tokens listing files via Read.
+   `Tree` already skips noise dirs (node_modules, __pycache__, .venv, .git,
+   dist, build, target, ...) and honors .gitignore.
+
+2. **Anchors second.** Read the small "what is this" files:
+   `README*`, `pyproject.toml`, `package.json`, `Cargo.toml`, `go.mod`,
+   `Makefile`, `docker-compose.yml`. These reveal language, framework,
+   entry points, and dependencies in a few KB.
+
+3. **Symbols via Grep.** Before reading source files, use `Grep` to extract
+   signatures and find candidates. Examples:
+     - `Grep '^class ' --output_mode files_with_matches`
+     - `Grep '^def main\b' src/`
+     - `Grep 'from foo import' --output_mode count`
+   `Grep` is also ignore-aware by default. Much cheaper than `Read`.
+
+4. **Read selectively.** Only after the previous steps, `Read` the specific
+   files you've decided are relevant. For files > 500 lines, pass `offset` and
+   `limit` to grab the regions you actually need.
+
+Anti-patterns to AVOID:
+- `Read`-ing every file you find from `Glob`.
+- `Bash('ls -R')` or `Bash('find .')` — use `Tree`/`Glob` instead (filtered).
+- Passing `include_ignored=true` to `Glob`/`Grep`/`Tree` unless the user
+  explicitly asks about hidden/ignored files.
+
+# Cached tool results — when you see `cached="true"`
+
+Large tool results (long file reads, big grep dumps, heavy bash output) are
+NOT sent to you in full. Instead, you'll see:
+
+<vulp:tool_result name="Read" id="tt-abc" is_error="false" cached="true"
+                  full_size_chars="48312" total_lines="850">
+[first 40 lines of output]
+... [middle lines omitted — use Retrieve to see them] ...
+[last 10 lines of output]
+[full content cached as cache_id='tt-abc'. Fetch any slice with
+ Retrieve(cache_id='tt-abc', start_line=..., end_line=...) or
+ Retrieve(cache_id='tt-abc', pattern="..."). Do NOT re-run the original tool.]
+</vulp:tool_result>
+
+When you need a specific section of that body, call the `Retrieve` tool with
+the `cache_id` shown — it's an in-memory lookup, no I/O, much cheaper than
+re-running Read/Grep/Bash. Three modes:
+
+  - By line range:    Retrieve(cache_id="tt-abc", start_line=200, end_line=260)
+  - By regex:         Retrieve(cache_id="tt-abc", pattern="^class ", context_lines=3)
+  - First 400 lines:  Retrieve(cache_id="tt-abc")
+
+NEVER re-issue the original tool (Read/Grep/Bash) just to see more of a cached
+result — the file/state may have changed, and you'd waste an LLM round-trip.
 
 # Repair loop — CRITICAL
 

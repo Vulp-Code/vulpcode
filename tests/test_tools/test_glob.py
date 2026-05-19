@@ -118,3 +118,53 @@ async def test_glob_default_path_is_cwd(tmp_path: Path, monkeypatch: pytest.Monk
 def test_glob_does_not_require_confirm():
     cls = get_tool("Glob")
     assert cls._requires_confirm is False
+
+
+@pytest.mark.asyncio
+async def test_glob_skips_noise_dirs_by_default(tmp_path: Path):
+    """node_modules / __pycache__ / .venv / etc. must be hidden by default."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "main.py").write_text("x")
+    (tmp_path / "node_modules").mkdir()
+    (tmp_path / "node_modules" / "lodash.js").write_text("x")
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "cached.pyc").write_text("x")
+    (tmp_path / ".venv").mkdir()
+    (tmp_path / ".venv" / "lib.py").write_text("x")
+
+    cls = get_tool("Glob")
+    res = await cls().run(cls.Input(pattern="**/*", path=str(tmp_path)))
+    assert "main.py" in res.output
+    assert "lodash.js" not in res.output
+    assert "cached.pyc" not in res.output
+    assert "lib.py" not in res.output
+    assert res.metadata["ignored"] > 0
+
+
+@pytest.mark.asyncio
+async def test_glob_include_ignored_opt_in(tmp_path: Path):
+    """include_ignored=true disables the filter."""
+    (tmp_path / "node_modules").mkdir()
+    (tmp_path / "node_modules" / "lib.js").write_text("x")
+    (tmp_path / "src.js").write_text("y")
+
+    cls = get_tool("Glob")
+    res = await cls().run(
+        cls.Input(pattern="**/*.js", path=str(tmp_path), include_ignored=True)
+    )
+    assert "lib.js" in res.output
+    assert "src.js" in res.output
+
+
+@pytest.mark.asyncio
+async def test_glob_respects_gitignore(tmp_path: Path):
+    """A .gitignore in the enclosing repo must hide matched files."""
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".gitignore").write_text("secret.py\n")
+    (tmp_path / "secret.py").write_text("x")
+    (tmp_path / "public.py").write_text("y")
+
+    cls = get_tool("Glob")
+    res = await cls().run(cls.Input(pattern="*.py", path=str(tmp_path)))
+    assert "public.py" in res.output
+    assert "secret.py" not in res.output

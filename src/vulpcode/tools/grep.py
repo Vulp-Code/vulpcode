@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from vulpcode.tools._ignore import build_matcher
 from vulpcode.tools.base import Tool, ToolResult, tool
 
 
@@ -41,6 +42,7 @@ class GrepTool(Tool):
         flag_C: int | None = Field(default=None, alias="-C")
         head_limit: int | None = None
         multiline: bool = False
+        include_ignored: bool = False
 
         model_config = {"populate_by_name": True}
 
@@ -53,6 +55,10 @@ class GrepTool(Tool):
     @staticmethod
     async def _run_rg(args: GrepTool.Input) -> ToolResult:
         cmd: list[str] = ["rg", "--color=never"]
+        # ripgrep honors .gitignore + common VCS ignores by default. Only pass
+        # --no-ignore when the caller explicitly asked to include ignored files.
+        if args.include_ignored:
+            cmd.append("--no-ignore")
         if args.flag_i:
             cmd.append("-i")
         if args.multiline:
@@ -119,7 +125,14 @@ class GrepTool(Tool):
         if base.is_file():
             files = [base]
         else:
-            files = [p for p in base.rglob(args.glob or "*") if p.is_file()]
+            matcher = None if args.include_ignored else build_matcher(base)
+            files = []
+            for p in base.rglob(args.glob or "*"):
+                if not p.is_file():
+                    continue
+                if matcher is not None and matcher(p):
+                    continue
+                files.append(p)
 
         files_with_matches: list[Path] = []
         counts: dict[Path, int] = {}

@@ -36,6 +36,7 @@ dependencies = [
     "ollama>=0.4",
     "tomli-w>=1.0",
     "mcp>=1.0",
+    "pathspec>=0.12",
 ]
 
 [project.optional-dependencies]

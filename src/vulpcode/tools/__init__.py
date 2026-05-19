@@ -29,6 +29,8 @@ from vulpcode.tools import write as _write  # noqa: E402, F401  (registers Write
 from vulpcode.tools import edit as _edit  # noqa: E402, F401  (registers Edit, MultiEdit)
 from vulpcode.tools import glob as _glob  # noqa: E402, F401  (registers GlobTool)
 from vulpcode.tools import grep as _grep  # noqa: E402, F401  (registers GrepTool)
+from vulpcode.tools import tree as _tree  # noqa: E402, F401  (registers TreeTool)
+from vulpcode.tools import retrieve as _retrieve  # noqa: E402, F401  (registers RetrieveTool)
 from vulpcode.tools import bash as _bash  # noqa: E402, F401  (registers BashTool)
 from vulpcode.tools import bash_background as _bash_bg  # noqa: E402, F401  (registers BashOutput, KillBash)
 from vulpcode.tools import web as _web  # noqa: E402, F401  (registers WebFetch, WebSearch)

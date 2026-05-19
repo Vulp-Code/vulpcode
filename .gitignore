@@ -41,9 +41,8 @@ ENV/
 # ━━━ Vulpcode runtime (sessions, history, user config with secrets) ━━━
 .vulpcode/
 
-# ━━━ Development logs (runtime output of dev/prompt.sh) ━━━
-dev/LOG/
-dev/DOCUMENTACAO/LOG/
+# ━━━ Local dev scratch (docs, notebooks, ad-hoc tools — not part of the package) ━━━
+dev/
 
 # ━━━ Notebooks ━━━
 .ipynb_checkpoints/

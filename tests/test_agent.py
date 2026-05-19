@@ -239,8 +239,8 @@ async def test_phantom_commit_triggers_nudge_and_tool_call(echo_tool):
     assert len(nudges) == 1
 
 
-async def test_phantom_commit_nudge_fires_only_once():
-    """Even with two consecutive phantom commits, only one nudge is injected."""
+async def test_phantom_commit_nudge_escalates_up_to_three_attempts():
+    """Three consecutive phantom commits → three escalating nudges, then ErrorEvent."""
     p = MockProvider(
         [
             [
@@ -251,19 +251,83 @@ async def test_phantom_commit_nudge_fires_only_once():
                 StreamChunk(type="text", delta="vou ler agora mesmo"),
                 StreamChunk(type="stop"),
             ],
+            [
+                StreamChunk(type="text", delta="vou tentar de novo"),
+                StreamChunk(type="stop"),
+            ],
+            [
+                StreamChunk(type="text", delta="vou continuar prometendo"),
+                StreamChunk(type="stop"),
+            ],
         ]
     )
     a = Agent(provider=p, tools=[], system="s")
     events = []
     async for ev in a.turn("go"):
         events.append(ev)
-    # The second phantom commit must end the turn (no second nudge).
-    assert any(isinstance(e, TurnEndEvent) for e in events)
     nudges = [
         m for m in a.messages()
         if m.role == "user" and "REMINDER" in str(m.content)
     ]
-    assert len(nudges) == 1
+    assert len(nudges) == 3
+    # Final outcome is a visible ErrorEvent, not silent TurnEnd.
+    errors = [e for e in events if isinstance(e, ErrorEvent)]
+    assert errors
+    assert "phantom commit" in errors[0].error.lower()
+
+
+async def test_phantom_nudge_escalation_messages_differ():
+    """Each successive nudge uses a different (more forceful) wording."""
+    p = MockProvider(
+        [
+            [StreamChunk(type="text", delta="vou ler"), StreamChunk(type="stop")],
+            [StreamChunk(type="text", delta="vou ler"), StreamChunk(type="stop")],
+            [StreamChunk(type="text", delta="vou ler"), StreamChunk(type="stop")],
+            [StreamChunk(type="text", delta="vou ler"), StreamChunk(type="stop")],
+        ]
+    )
+    a = Agent(provider=p, tools=[], system="s")
+    async for _ in a.turn("go"):
+        pass
+    nudges = [
+        m.content for m in a.messages()
+        if m.role == "user" and "REMINDER" in str(m.content)
+    ]
+    assert len(nudges) == 3
+    # Tones escalate: polite → SECOND → FINAL.
+    assert "SECOND REMINDER" in nudges[1]
+    assert "FINAL REMINDER" in nudges[2]
+
+
+async def test_phantom_nudge_stops_once_model_complies(echo_tool):
+    """If the model emits a tool call after the second nudge, no third nudge fires."""
+    tc = ToolCall(id="t1", name="Echo", arguments={"text": "hi"})
+    p = MockProvider(
+        [
+            # 1st turn: phantom #1
+            [StreamChunk(type="text", delta="vou ler"), StreamChunk(type="stop")],
+            # 2nd turn (after 1st nudge): phantom #2
+            [StreamChunk(type="text", delta="agora vou ler"), StreamChunk(type="stop")],
+            # 3rd turn (after 2nd nudge): finally a tool call
+            [StreamChunk(type="tool_call", tool_call=tc), StreamChunk(type="stop")],
+            # 4th turn (after tool result): wrap up
+            [StreamChunk(type="text", delta="done"), StreamChunk(type="stop")],
+        ]
+    )
+    a = Agent(provider=p, tools=[echo_tool()], system="s")
+    events = []
+    async for ev in a.turn("go"):
+        events.append(ev)
+    nudges = [
+        m for m in a.messages()
+        if m.role == "user" and "REMINDER" in str(m.content)
+    ]
+    assert len(nudges) == 2  # only 2 fired; 3rd would have been the final
+    starts = [e for e in events if isinstance(e, ToolStartEvent)]
+    assert len(starts) == 1
+    # Ends cleanly, not as an error.
+    errors = [e for e in events if isinstance(e, ErrorEvent)]
+    assert not errors
 
 
 async def test_no_nudge_when_text_is_clean():

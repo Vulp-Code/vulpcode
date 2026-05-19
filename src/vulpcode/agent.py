@@ -30,10 +30,30 @@ _PHANTOM_COMMIT_RE = re.compile(
     re.IGNORECASE,
 )
 
-_PHANTOM_NUDGE = (
+_PHANTOM_NUDGES: tuple[str, ...] = (
+    # Attempt 1 — polite.
     "REMINDER: você descreveu uma ação mas não invocou nenhuma ferramenta. "
     "Invoque a ferramenta apropriada agora, no formato exato do protocolo, "
-    "sem mais prosa. (If you cannot, explain explicitly what is blocking you.)"
+    "sem mais prosa. (If you cannot, explain explicitly what is blocking you.)",
+    # Attempt 2 — firmer + concrete hint about the most likely next tool.
+    "SECOND REMINDER: ainda sem tool call. Pare de descrever — EMITA o bloco "
+    "<vulp:tool name=\"...\"> AGORA. Se acabou de listar arquivos com Glob/Tree "
+    "e o pedido envolve buscar conteúdo, o próximo bloco é OBRIGATORIAMENTE "
+    "<vulp:tool name=\"Grep\"> com o padrão de busca. Zero prosa antes ou depois.",
+    # Attempt 3 — last call.
+    "FINAL REMINDER: três tentativas consumidas. Se você não consegue emitir "
+    "uma tool call agora, explique em UMA frase exatamente o que está "
+    "bloqueando (falta de path, ambiguidade no pedido, etc.) — não descreva "
+    "mais ações sem executá-las.",
+)
+
+_MAX_PHANTOM_NUDGES = len(_PHANTOM_NUDGES)
+
+_PHANTOM_EXHAUSTED_ERROR = (
+    f"Model emitted {_MAX_PHANTOM_NUDGES} consecutive phantom commits "
+    "(described actions without invoking any tool). Turn aborted. "
+    "Try refining the prompt with a concrete next step, or switch to a "
+    "stronger model."
 )
 
 
@@ -290,7 +310,7 @@ class Agent:
             One :data:`Event` at a time, in causal order.
         """
         self._messages.append(Message(role="user", content=user_input))
-        phantom_nudge_used = False
+        phantom_nudges_used = 0
         for _ in range(self._max_iters):
             text_buffer = ""
             tool_calls: list[ToolCall] = []
@@ -338,14 +358,23 @@ class Agent:
 
             if not tool_calls:
                 if (
-                    not phantom_nudge_used
+                    phantom_nudges_used < _MAX_PHANTOM_NUDGES
                     and _looks_like_phantom_commit(text_buffer)
                 ):
-                    phantom_nudge_used = True
                     self._messages.append(
-                        Message(role="user", content=_PHANTOM_NUDGE)
+                        Message(
+                            role="user",
+                            content=_PHANTOM_NUDGES[phantom_nudges_used],
+                        )
                     )
+                    phantom_nudges_used += 1
                     continue
+                if (
+                    phantom_nudges_used == _MAX_PHANTOM_NUDGES
+                    and _looks_like_phantom_commit(text_buffer)
+                ):
+                    yield ErrorEvent(_PHANTOM_EXHAUSTED_ERROR)
+                    return
                 yield TurnEndEvent(stop_reason or "end_turn")
                 return
 

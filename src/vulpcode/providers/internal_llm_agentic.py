@@ -536,7 +536,10 @@ class InternalLLMAgenticProvider(Provider):
 
         yield StreamChunk(
             type="usage",
-            usage=Usage(output_tokens=len(raw_text.split())),
+            usage=Usage(
+                input_tokens=self._messages_tokens(api_messages),
+                output_tokens=self._estimate_tokens(raw_text),
+            ),
         )
         yield StreamChunk(
             type="stop",

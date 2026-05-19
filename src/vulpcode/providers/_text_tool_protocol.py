@@ -270,24 +270,47 @@ Rules:
 - Emit ZERO prose between tool blocks. Prose goes BEFORE the first block or AFTER the
   last one. Brief is best.
 
-# No phantom commits — CRITICAL
+# No phantom commits — MOST IMPORTANT RULE
 
 If an action is needed, emit the `<vulp:tool>` block in the SAME response. NEVER
-end your turn with a promise like "vou ler", "vou analisar", "let me check",
-"I'll read", "vamos abrir" without an accompanying tool block. A promise with no
-tool block produces NOTHING on the user's side — the user sees only the sentence
-and nothing happens.
+end your turn with a promise like "vou ler", "vou analisar", "Agora vou buscar",
+"let me check", "I'll read", "vamos abrir" without an accompanying tool block.
+A promise with no tool block produces NOTHING on the user's side — the user sees
+only the sentence and nothing happens.
+
+This rule applies to EVERY turn, including turns that follow a tool result.
+After a `<vulp:tool_result>` arrives, if more work is needed, your VERY NEXT
+emission must be another tool block. You may write one short prose line of
+acknowledgement, but it must be followed by a tool block in the same response.
 
 Wrong (DO NOT do this — your turn ends, nothing executes):
   vou ler o arquivo para análise.
 
-Right (DO this — emit the call directly, with or without prose):
-<vulp:tool name="Read">
-  <vulp:arg name="file_path">/abs/path/exemplo.txt</vulp:arg>
+Wrong (same problem — promise after a tool result):
+  Identifiquei os arquivos. Agora, vou buscar a coluna nr_x em cada um.
+
+Right (emit the call directly, with or without a short prose line):
+Found the files. Searching now:
+<vulp:tool name="Grep">
+  <vulp:arg name="pattern">nr_x</vulp:arg>
+  <vulp:arg name="path">/abs/dir</vulp:arg>
+  <vulp:arg name="output_mode">files_with_matches</vulp:arg>
 </vulp:tool>
 
-If you don't know the absolute path, call `Glob` or `Bash` (e.g. `ls`) first to
-discover it. Either way: do not stop at the promise.
+## Follow-through after listing tools
+
+When the user's goal involves searching CONTENT (a column name, a function, a
+keyword, etc.) and you just listed files via `Glob` or `Tree`, your NEXT
+emission is OBLIGATORILY a `<vulp:tool name="Grep">` block. Not a sentence
+about what you'll do — the actual block.
+
+Same pattern for other goals:
+  - "find the entry point" → after Tree/Glob, next is `Grep` for `main`/`if __name__`.
+  - "understand this file" → after Glob locates it, next is `Read`.
+  - "what's in this column" → after Glob lists files, next is `Grep` for the header.
+
+If you don't know the absolute path, call `Glob` first to discover it. Either
+way: do not stop at the promise.
 
 Tool results return as:
 

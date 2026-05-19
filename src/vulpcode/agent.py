@@ -200,6 +200,7 @@ class Agent:
         model: str = "",
         permissions: PermissionManager | None = None,
         model_settings: dict | None = None,
+        max_iters: int = 25,
     ) -> None:
         self.provider = provider
         self.tools: dict[str, Tool] = {t._tool_name: t for t in tools}
@@ -209,7 +210,7 @@ class Agent:
         self.model_settings: dict = dict(model_settings or {})
         self._messages: list[Message] = []
         self._session_usage: Usage = Usage()
-        self._max_iters = 25
+        self._max_iters = max_iters
 
     def messages(self) -> list[Message]:
         """Return a shallow copy of the running conversation transcript."""

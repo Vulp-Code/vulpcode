@@ -54,15 +54,17 @@ Vulpcode ships two equivalent console scripts: `vulp` (short) and `vulpcode`.
 
 ### Optional extras
 
-| Extra      | Adds                                                                      | Use it for                              |
-| ---------- | ------------------------------------------------------------------------- | --------------------------------------- |
-| `[dev]`    | `pytest`, `pytest-asyncio`, `ruff`, `mypy`, `respx`                       | Contributors running the test suite     |
-| `[docs]`   | `mkdocs`, `mkdocs-material`, `mkdocstrings[python]`, `pymdown-extensions` | Building the documentation site         |
-| `[search]` | `duckduckgo-search`                                                       | Using `WebSearch` without a Tavily key  |
+| Extra           | Adds                                                                      | Use it for                                              |
+| --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `[dev]`         | `pytest`, `pytest-asyncio`, `ruff`, `mypy`, `respx`                       | Contributors running the test suite                     |
+| `[docs]`        | `mkdocs`, `mkdocs-material`, `mkdocstrings[python]`, `pymdown-extensions` | Building the documentation site                         |
+| `[search]`      | `duckduckgo-search`                                                       | Using `WebSearch` without a Tavily key                  |
+| `[docs-tools]`  | `python-docx`, `reportlab`, `pypdf`, `markdown-it-py`, `nbformat`, `PyYAML`, `sqlparse`, `pydot` | Validators for the `Write*` family (docx/pdf/notebook/etc.) |
 
 ```bash
 pip install "vulpcode[search]"
 pip install "vulpcode[dev,docs]"
+pip install "vulpcode[docs-tools]"
 ```
 
 ### From source
@@ -108,10 +110,24 @@ vulp --provider groq --model llama-3.3-70b-versatile
 
 ### Use an internal corporate endpoint
 
+The library ships two providers for internal corporate `/chatCompletion` endpoints:
+
+| Provider | When to use |
+|---|---|
+| `internal-llm` | Plain chat only — no file creation, no shell, no agentic loop |
+| `internal-llm-agentic` | Full agentic flow via a text-based tool protocol (recommended) |
+
+Both read the same env vars:
+
 ```bash
 export INTERNAL_LLM_ENDPOINT="https://internal.example.com/v1/chat"
 export INTERNAL_LLM_USER_UUID="00000000-0000-0000-0000-000000000000"
+
+# Chat-only mode
 vulp --provider internal-llm
+
+# Full agent (creates files, runs validators, retries on syntax errors)
+vulp --provider internal-llm-agentic
 ```
 
 ---
@@ -130,6 +146,7 @@ vulp --provider internal-llm
 | `lmstudio`     | Local                 |   x   |        |    x      |
 | `vllm`         | Local                 |   x   |        |    x      |
 | `internal-llm` | Corporate endpoint    |       |        |           |
+| `internal-llm-agentic` | Corporate endpoint (text-protocol tool calling) | x | | |
 
 Run `vulp providers` to list them at any time.
 
@@ -153,6 +170,32 @@ Run `vulp providers` to list them at any time.
 | `Task`         | Delegate work to a sub-agent                           |
 | `TodoWrite`    | Persistent task list inside a session                  |
 | `NotebookEdit` | Edit Jupyter notebook cells                            |
+
+### Validated write tools
+
+Format-specific writers that **parse-and-validate** the content before
+saving and write atomically (temp file + rename). If validation fails the
+target file is never touched, so the agent can repair the input and retry.
+
+| Tool         | Format    | Validation                                  |
+| ------------ | --------- | ------------------------------------------- |
+| `WritePy`    | Python    | `compile()` (syntax check)                  |
+| `WriteIpynb` | Notebook  | `nbformat` schema                           |
+| `WriteMd`    | Markdown  | `markdown-it-py`                            |
+| `WriteDocx`  | Word      | `python-docx`                               |
+| `WritePdf`   | PDF       | `pypdf` (or `reportlab` for generation)     |
+| `WriteJson`  | JSON      | `json.loads`                                |
+| `WriteYaml`  | YAML      | `PyYAML` safe-load                          |
+| `WriteToml`  | TOML      | `tomllib`                                   |
+| `WriteCsv`   | CSV       | `csv` round-trip                            |
+| `WriteXml`   | XML       | `xml.etree`                                 |
+| `WriteHtml`  | HTML      | `html.parser`                               |
+| `WriteSh`    | Shell     | `bash -n` syntax check                      |
+| `WriteSql`   | SQL       | `sqlparse`                                  |
+| `WriteSvg`   | SVG       | `xml.etree` + root-element check            |
+| `WriteDot`   | Graphviz  | `pydot`                                     |
+
+Install the non-stdlib validators with `pip install "vulpcode[docs-tools]"`.
 
 ---
 
@@ -235,8 +278,9 @@ Sessions, history, and per-project state live under `~/.vulpcode/`.
 
 ## Status
 
-Alpha. The CLI surface, tool set, and config format may still change
-before 1.0. See [CHANGELOG.md](CHANGELOG.md) for release notes.
+Alpha (current release: **0.2.0**). The CLI surface, tool set, and config
+format may still change before 1.0. See [CHANGELOG.md](CHANGELOG.md) for
+release notes.
 
 ---
 

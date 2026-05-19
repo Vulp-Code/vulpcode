@@ -142,6 +142,7 @@ nav:
       - Gemini: providers/gemini.md
       - Ollama: providers/ollama.md
       - Endpoint corporativo: providers/internal-llm.md
+      - Internal LLM (agentic): providers/internal-llm-agentic.md
       - Trocar em runtime: providers/switching-at-runtime.md
   - Tools:
       - tools/index.md
@@ -149,6 +150,7 @@ nav:
       - Busca e Shell: tools/search-and-shell.md
       - Agente: tools/agent.md
       - Web: tools/web.md
+      - Validated Write family: tools/validated-write.md
   - Configuracao:
       - configuration/index.md
       - config.toml: configuration/config-toml.md

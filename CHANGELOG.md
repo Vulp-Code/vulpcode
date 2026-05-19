@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0] - 2026-05-18
+
+### Added
+- New provider `internal-llm-agentic`: corporate `/chatCompletion` endpoints
+  now get full agentic capabilities via a text-based tool calling protocol.
+- New family of file-creation tools with built-in validation and atomic save:
+  `WritePy`, `WriteIpynb`, `WriteMd`, `WriteDocx`, `WritePdf`, `WriteJson`,
+  `WriteYaml`, `WriteToml`, `WriteCsv`, `WriteXml`, `WriteHtml`, `WriteSh`,
+  `WriteSql`, `WriteSvg`, `WriteDot`.
+- New optional extra `[docs-tools]` for the non-stdlib validators.
+
+### Changed
+- `Agent` accepts a new `max_iters` parameter; default remains 25 but
+  `internal-llm-agentic` uses 50 to accommodate repair iterations.
+
 ## [0.1.1] - 2026-05-14
 
 - Expanded English README with installation, providers table, tools table,

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risco de Modelo - Apresentação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 40px;
+            background: white;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            color: #764ba2;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.8em;
+            color: #667eea;
+            margin: 25px 0 15px 0;
+        }
+
+        p, li {
+            font-size: 1.3em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        ul li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 0.8em;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .box {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            width: 100%;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 1em;
+            color: #888;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .numero {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Título -->
+    <div class="slide">
+        <h1>🎯 Risco de Modelo</h1>
+        <p style="font-size: 1.8em; color: #764ba2; text-align: center;">
+            Gestão, Avaliação e Mitigação
+        </p>
+        <div class="footer">
+            <p>Apresentação Técnica | 2024</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Definição -->
+    <div class="slide">
+        <h2>📋 O que é Risco de Modelo?</h2>
+        <div class="box">
+            <p><strong>Definição:</strong> Risco de perdas financeiras, decisões inadequadas ou danos reputacionais decorrentes de erros no desenvolvimento, implementação ou uso de modelos.</p>
+        </div>
+        <h3>Origens do Risco:</h3>
+        <ul>
+            <li><strong>Erros fundamentais:</strong> Premissas incorretas, especificação inadequada, formulação matemática equivocada</li>
+            <li><strong>Implementação deficiente:</strong> Bugs no código, calibração inadequada, dados incorretos</li>
+            <li><strong>Uso inadequado:</strong> Aplicação fora do escopo, má interpretação dos resultados</li>
+            <li><strong>Mudanças no ambiente:</strong> Quebras estruturais, novos regimes de mercado</li>
+        </ul>
+    </div>
+
+    <!-- Slide 3: Regulamentação -->
+    <div class="slide">
+        <h2>⚖️ Regulamentação</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>SR 11-7 (Fed/OCC)</h3>
+                <p>Guidance on Model Risk Management (2011)</p>
+                <p>Base para governança de modelos nos EUA</p>
+            </div>
+            <div class="card">
+                <h3>Basileia</h3>
+                <p>Princípios para validação de modelos internos</p>
+                <p>Foco em risco de crédito e mercado</p>
+            </div>
+            <div class="card">
+                <h3>CMN/BCB (Brasil)</h3>
+                <p>Resoluções 4.557/2017 e 4.945/2021</p>
+                <p>Estrutura de gerenciamento de riscos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Framework de Governança -->
+    <div class="slide">
+        <h2>🏛️ Framework de Governança</h2>
+        <h3>Três Linhas de Defesa:</h3>
+        <table>
+            <tr>
+                <th>Linha</th>
+                <th>Responsável</th>
+                <th>Função</th>
+            </tr>
+            <tr>
+                <td><strong>1ª Linha</strong></td>
+                <td>Desenvolvedores / Usuários</td>
+                <td>Desenvolvimento, implementação e controles iniciais</td>
+            </tr>
+            <tr>
+                <td><strong>2ª Linha</strong></td>
+                <td>Validação Independente</td>
+                <td>Revisão crítica, testes e validação</td>
+            </tr>
+            <tr>
+                <td><strong>3ª Linha</strong></td>
+                <td>Auditoria Interna</td>
+                <td>Avaliação do framework de governança</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Slide 5: Ciclo de Vida -->
+    <div class="slide">
+        <h2>🔄 Ciclo de Vida do Modelo</h2>
+        <div class="grid">
+            <div class="card">
+                <div class="numero">1</div>
+                <h3>Desenvolvimento</h3>
+                <p>Design, especificação, escolha de metodologia, documentação inicial</p>
+            </div>
+            <div class="card">
+                <div class="numero">2</div>
+                <h3>Validação</h3>
+                <p>Revisão independente, testes, benchmarking, aprovação</p>
+            </div>
+            <div class="card">
+                <div class="numero">3</div>
+                <h3>Implementação</h3>
+                <p>Integração em sistemas, testes UAT, treinamento de usuários</p>
+            </div>
+            <div class="card">
+                <div class="numero">4</div>
+                <h3>Uso / Monitoramento</h3>
+                <p>Aplicação operacional, monitoramento contínuo, reporting</p>
+            </div>
+            <div class="card">
+                <div class="numero">5</div>
+                <h3>Revisão Periódica</h3>
+                <p>Revalidação anual/periódica, ajustes, recalibragem</p>
+            </div>
+            <div class="card">
+                <div class="numero">6</div>
+                <h3>Descontinuação</h3>
+                <p>Substituição ou desativação controlada</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Validação -->
+    <div class="slide">
+        <h2>✅ Processo de Validação</h2>
+        <h3>Componentes Essenciais:</h3>
+        <ul>
+            <li><strong>Avaliação Conceitual:</strong> Solidez teórica, adequação da metodologia, premissas razoáveis</li>
+            <li><strong>Revisão de Dados:</strong> Qualidade, relevância, suficiência, representatividade</li>
+            <li><strong>Testes Quantitativos:</strong> Backtesting, análise de sensibilidade, testes de estresse</li>
+            <li><strong>Benchmarking:</strong> Comparação com modelos alternativos ou padrões de mercado</li>
+            <li><strong>Resultados e Outcomes Analysis:</strong> Comparação previsões vs. realizações</li>
+            <li><strong>Revisão de Código:</strong> Verificação de implementação, testes unitários</li>
+            <li><strong>Documentação:</strong> Completude, clareza, rastreabilidade</li>
+        </ul>
+    </div>
+
+    <!-- Slide 7: Monitoramento -->
+    <div class="slide">
+        <h2>📊 Monitoramento Contínuo</h2>
+        <div class="highlight">
+            <h3 style="color: white;">Indicadores-chave (KRIs/KPIs):</h3>
+        </div>
+        <ul>
+            <li><strong>Performance Metrics:</strong> Acurácia, precisão, recall, AUC, R²</li>
+            <li><strong>Stability Metrics:</strong> PSI (Population Stability Index), CSI (Characteristic Stability Index)</li>
+            <li><strong>Usage Metrics:</strong> Overrides, frequência de uso, volume de transações</li>
+            <li><strong>Data Quality:</strong> Missing values, outliers, distribuição de features</li>
+            <li><strong>Backtesting Results:</strong> Número de exceções, magnitude de desvios</li>
+        </ul>
+        <div class="box">
+            <p><strong>Triggers para Revalidação:</strong> Degradação de performance, mudanças regulatórias, alterações no ambiente, descoberta de erros</p>
+        </div>
+    </div>
+
+    <!-- Slide 8: Inventário e Classificação -->
+    <div class="slide">
+        <h2>📚 Inventário e Classificação</h2>
+        <h3>Critérios de Classificação:</h3>
+        <table>
+            <tr>
+                <th>Tier</th>
+                <th>Complexidade</th>
+                <th>Impacto</th>
+                <th>Requisitos</th>
+            </tr>
+            <tr>
+                <td><strong>Tier 1</strong></td>
+                <td>Alta</td>
+                <td>Alto impacto financeiro/estratégico</td>
+                <td>Validação completa, monitoramento intensivo</td>
+            </tr>
+            <tr>
+                <td><strong>Tier 2</strong></td>
+                <td>Média</td>
+                <td>Impacto moderado</td>
+                <td>Validação intermediária, monitoramento regular</td>
+            </tr>
+            <tr>
+                <td><strong>Tier 3</strong></td>
+                <td>Baixa</td>
+                <td>Impacto limitado</td>
+                <td>Validação simplificada, monitoramento básico</td>
+            </tr>
+        </table>
+        <div class="box">
+            <p><strong>Inventário de Modelos:</strong> Registro centralizado com nome, owner, tier, status, data de validação, próxima revisão</p>
+        </div>
+    </div>
+
+    <!-- Slide 9: Desafios Comuns -->
+    <div class="slide">
+        <h2>⚠️ Desafios e Armadilhas</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Overfitting</h3>
+                <p>Modelo excessivamente ajustado aos dados históricos, sem capacidade de generalização</p>
+            </div>
+            <div class="card">
+                <h3>Data Leakage</h3>
+                <p>Informação do futuro vazando para o treinamento</p>
+            </div>
+            <div class="card">
+                <h3>Viés de Seleção</h3>
+                <p>Amostra não representativa da população real</p>
+            </div>
+            <div class="card">
+                <h3>Model Drift</h3>
+                <p>Degradação gradual por mudanças no ambiente</p>
+            </div>
+            <div class="card">
+                <h3>Falta de Documentação</h3>
+                <p>Conhecimento concentrado, impossibilidade de replicação</p>
+            </div>
+            <div class="card">
+                <h3>Dependências Ocultas</h3>
+                <p>Modelos interdependentes criando risco sistêmico</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Machine Learning -->
+    <div class="slide">
+        <h2>🤖 Risco em Machine Learning</h2>
+        <h3>Desafios Adicionais:</h3>
+        <ul>
+            <li><strong>Explicabilidade:</strong> Modelos "caixa-preta" dificultam interpretação (XAI/SHAP necessários)</li>
+            <li><strong>Viés Algorítmico:</strong> Discriminação não intencional em variáveis protegidas</li>
+            <li><strong>Adversarial Attacks:</strong> Manipulação de inputs para enganar o modelo</li>
+            <li><strong>Escalabilidade de Validação:</strong> Múltiplas versões, retraining frequente</li>
+            <li><strong>Feature Engineering:</strong> Transformações complexas aumentam risco de erro</li>
+        </ul>
+        <div class="highlight">
+            <p><strong>Regulamentação Emergente:</strong> EU AI Act, diretrizes do BCB para IA, requisitos de fairness e transparência</p>
+        </div>
+    </div>
+
+    <!-- Slide 11: Melhores Práticas -->
+    <div class="slide">
+        <h2>✨ Melhores Práticas</h2>
+        <div class="box">
+            <h3>Cultura de Gestão de Risco:</h3>
+            <ul>
+                <li>Tone from the top: comprometimento da alta administração</li>
+                <li>Incentivos alinhados: não penalizar reportes de problemas</li>
+                <li>Capacitação contínua: treinamento em modelagem e validação</li>
+            </ul>
+        </div>
+        <div class="box">
+            <h3>Controles Técnicos:</h3>
+            <ul>
+                <li>Versionamento de código e dados (Git, DVC)</li>
+                <li>Testes automatizados (unit, integration, data quality)</li>
+                <li>Ambientes segregados (dev, QA, prod)</li>
+                <li>Peer review obrigatório</li>
+            </ul>
+        </div>
+        <div class="box">
+            <h3>Documentação:</h3>
+            <ul>
+                <li>Model Development Document (MDD) completo</li>
+                <li>Validation Report independente</li>
+                <li>Runbooks operacionais</li>
+                <li>Change logs detalhados</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 12: Conclusão -->
+    <div class="slide">
+        <h2>🎯 Conclusão</h2>
+        <div class="highlight">
+            <h3 style="color: white;">Mensagens-chave:</h3>
+            <ul style="color: white;">
+                <li>Risco de modelo é inerente e não pode ser eliminado, apenas gerenciado</li>
+                <li>Governança efetiva requer estrutura, processos e cultura adequados</li>
+                <li>Validação independente é essencial - não opcional</li>
+                <li>Monitoramento contínuo identifica degradação precoce</li>
+                <li>Documentação clara garante transparência e continuidade</li>
+            </ul>
+        </div>
+        <div class="box">
+            <p style="font-size: 1.5em; text-align: center; margin-top: 30px;">
+                <strong>"All models are wrong, but some are useful"</strong><br>
+                <em>- George Box</em>
+            </p>
+        </div>
+        <div class="footer">
+            <p>Obrigado! | Perguntas?</p>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -22,6 +22,7 @@ from vulpcode.providers.anthropic import AnthropicProvider
 from vulpcode.providers.base import Provider
 from vulpcode.providers.gemini import GeminiProvider
 from vulpcode.providers.internal_llm import InternalLLMProvider
+from vulpcode.providers.internal_llm_agentic import InternalLLMAgenticProvider
 from vulpcode.providers.ollama import OllamaProvider
 from vulpcode.providers.openai import OpenAIProvider
 
@@ -45,6 +46,7 @@ _DEDICATED: dict[str, type[Provider]] = {
     "anthropic": AnthropicProvider,
     "gemini": GeminiProvider,
     "internal-llm": InternalLLMProvider,
+    "internal-llm-agentic": InternalLLMAgenticProvider,
     "ollama": OllamaProvider,
 }
 
@@ -59,7 +61,7 @@ def list_provider_names() -> list[str]:
     Example:
         >>> list_provider_names()
         ['anthropic', 'deepseek', 'gemini', 'groq', 'internal-llm',
-         'lmstudio', 'ollama', 'openai', 'openrouter', 'vllm']
+         'internal-llm-agentic', 'lmstudio', 'ollama', 'openai', 'openrouter', 'vllm']
     """
     return sorted(set(_DEDICATED) | set(OPENAI_COMPATIBLE_PRESETS))
 

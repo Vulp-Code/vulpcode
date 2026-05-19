@@ -37,23 +37,31 @@ can only *replace* values inside this skeleton (see `_deep_merge`).
 """
 
 
-ENV_MAP: dict[str, tuple[str, ...]] = {
-    "VULPCODE_PROVIDER": ("default_provider",),
-    "VULPCODE_MODEL": ("default_model",),
-    "ANTHROPIC_API_KEY": ("providers", "anthropic", "api_key"),
-    "OPENAI_API_KEY": ("providers", "openai", "api_key"),
-    "GEMINI_API_KEY": ("providers", "gemini", "api_key"),
-    "GOOGLE_API_KEY": ("providers", "gemini", "api_key"),
-    "DEEPSEEK_API_KEY": ("providers", "deepseek", "api_key"),
-    "GROQ_API_KEY": ("providers", "groq", "api_key"),
-    "OPENROUTER_API_KEY": ("providers", "openrouter", "api_key"),
-    "INTERNAL_LLM_ENDPOINT": ("providers", "internal-llm", "base_url"),
-    "INTERNAL_LLM_USER_UUID": ("providers", "internal-llm", "user_uuid"),
+ENV_MAP: dict[str, list[tuple[str, ...]]] = {
+    "VULPCODE_PROVIDER": [("default_provider",)],
+    "VULPCODE_MODEL": [("default_model",)],
+    "ANTHROPIC_API_KEY": [("providers", "anthropic", "api_key")],
+    "OPENAI_API_KEY": [("providers", "openai", "api_key")],
+    "GEMINI_API_KEY": [("providers", "gemini", "api_key")],
+    "GOOGLE_API_KEY": [("providers", "gemini", "api_key")],
+    "DEEPSEEK_API_KEY": [("providers", "deepseek", "api_key")],
+    "GROQ_API_KEY": [("providers", "groq", "api_key")],
+    "OPENROUTER_API_KEY": [("providers", "openrouter", "api_key")],
+    "INTERNAL_LLM_ENDPOINT": [
+        ("providers", "internal-llm", "base_url"),
+        ("providers", "internal-llm-agentic", "base_url"),
+    ],
+    "INTERNAL_LLM_USER_UUID": [
+        ("providers", "internal-llm", "user_uuid"),
+        ("providers", "internal-llm-agentic", "user_uuid"),
+    ],
 }
-"""Mapping of environment variable name to its dotted path inside the config.
+"""Mapping of environment variable name to config paths to write.
 
-Each tuple is the sequence of nested keys to write into. For example,
-``ANTHROPIC_API_KEY`` writes to ``cfg["providers"]["anthropic"]["api_key"]``.
+Each value is a list of path tuples. Most env vars map to a single path; some
+(like ``INTERNAL_LLM_ENDPOINT``) fan out to multiple providers that share the
+same endpoint. For example, ``ANTHROPIC_API_KEY`` writes to
+``cfg["providers"]["anthropic"]["api_key"]``.
 Only env vars listed here are honored; everything else is ignored.
 """
 
@@ -150,10 +158,11 @@ def load_config(
     for path in config_paths(cwd):
         cfg = _deep_merge(cfg, _load_toml(path))
 
-    for env_key, target_path in ENV_MAP.items():
+    for env_key, target_paths in ENV_MAP.items():
         val = env.get(env_key)
         if val:
-            _set_path(cfg, target_path, val)
+            for target_path in target_paths:
+                _set_path(cfg, target_path, val)
 
     if cli_overrides:
         cfg = _deep_merge(cfg, cli_overrides)

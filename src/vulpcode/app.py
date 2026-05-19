@@ -85,6 +85,7 @@ async def start_repl(
         model=model,
         permissions=permissions,
         model_settings=cfg.get("model_settings", {}) or {},
+        max_iters=50 if provider_name == "internal-llm-agentic" else 25,
     )
 
     repl = Repl(

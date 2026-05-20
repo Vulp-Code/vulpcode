@@ -18,13 +18,23 @@ Two endpoint constraints are enforced here so they cannot break a turn:
 from __future__ import annotations
 
 import asyncio
+import json
 import re
+import sys
 from typing import Any, AsyncIterator
 
 import httpx
 
 from vulpcode.providers._content_store import ContentStore, get_default_store
+from vulpcode.providers._internal_llm_agentic_config import (
+    ConfigCreated,
+    ConfigIncomplete,
+    load_or_init as _load_user_config,
+    render_created_message,
+    render_incomplete_message,
+)
 from vulpcode.providers._text_tool_protocol import (
+    HALLUCINATED_TOOL_RESULT,
     make_preview,
     parse_response,
     render_cached_tool_result,
@@ -38,6 +48,74 @@ from vulpcode.providers.base import (
     StreamChunk,
     Usage,
 )
+
+
+def _resolve_ref(schema: dict[str, Any], root: dict[str, Any]) -> dict[str, Any]:
+    ref = schema.get("$ref")
+    if not isinstance(ref, str) or not ref.startswith("#/"):
+        return schema
+    node: Any = root
+    for part in ref[2:].split("/"):
+        if not isinstance(node, dict) or part not in node:
+            return schema
+        node = node[part]
+    return node if isinstance(node, dict) else schema
+
+
+def _expected_types(prop_schema: dict[str, Any], root: dict[str, Any]) -> set[str]:
+    seen: set[int] = set()
+    out: set[str] = set()
+
+    def walk(s: Any) -> None:
+        if not isinstance(s, dict) or id(s) in seen:
+            return
+        seen.add(id(s))
+        s = _resolve_ref(s, root)
+        t = s.get("type")
+        if isinstance(t, str):
+            out.add(t)
+        elif isinstance(t, list):
+            out.update(x for x in t if isinstance(x, str))
+        for key in ("anyOf", "oneOf", "allOf"):
+            for sub in s.get(key, []) or []:
+                walk(sub)
+
+    walk(prop_schema)
+    return out
+
+
+def _coerce_text_args(
+    arguments: dict[str, Any], input_schema: dict[str, Any]
+) -> dict[str, Any]:
+    """JSON-decode string args when the schema expects array/object.
+
+    The text tool-calling protocol can only deliver strings across the wire,
+    so a tool whose Input declares ``list[...]`` or ``dict[...]`` will receive
+    a JSON-encoded blob instead of the parsed value. Pydantic then rejects
+    the string. This helper unblocks it without changing per-tool schemas.
+    Silent no-op when the string is not valid JSON.
+    """
+    props = input_schema.get("properties") if isinstance(input_schema, dict) else None
+    if not isinstance(props, dict) or not isinstance(arguments, dict):
+        return arguments
+    out = dict(arguments)
+    for key, value in arguments.items():
+        if not isinstance(value, str):
+            continue
+        prop_schema = props.get(key)
+        if not isinstance(prop_schema, dict):
+            continue
+        types = _expected_types(prop_schema, input_schema)
+        if not (types & {"array", "object"}):
+            continue
+        stripped = value.strip()
+        if not stripped or stripped[0] not in "[{":
+            continue
+        try:
+            out[key] = json.loads(stripped)
+        except (ValueError, TypeError):
+            pass
+    return out
 
 
 class InternalLLMAgenticProvider(Provider):
@@ -75,6 +153,9 @@ class InternalLLMAgenticProvider(Provider):
         max_retries: int = 3,
         retry_delay: float = 5.0,
         max_input_tokens: int = DEFAULT_MAX_INPUT_TOKENS,
+        max_output_tokens: int | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
         preview_threshold: int = DEFAULT_PREVIEW_THRESHOLD,
         preview_head_lines: int = DEFAULT_PREVIEW_HEAD_LINES,
         preview_tail_lines: int = DEFAULT_PREVIEW_TAIL_LINES,
@@ -97,7 +178,40 @@ class InternalLLMAgenticProvider(Provider):
         )
         self.auto_compact = auto_compact
         self.auto_compact_at = auto_compact_at
-        self._client = httpx.AsyncClient(timeout=timeout)
+        self.timeout = timeout
+        self._default_max_tokens: int | None = max_output_tokens
+        self._default_temperature: float | None = temperature
+        self._default_top_p: float | None = top_p
+
+        if (not self.endpoint or not self.user_uuid) and "pytest" not in sys.modules:
+            self._apply_user_config_file()
+
+        self._client = httpx.AsyncClient(timeout=self.timeout)
+
+    def _apply_user_config_file(self) -> None:
+        """Load ``~/.vulpcode/internal-llm-agentic.json`` and fill missing fields.
+
+        Called only when ``endpoint`` or ``user_uuid`` were not supplied via
+        kwargs/env/TOML. If the JSON file is missing or incomplete, print a
+        Portuguese message telling the user what to edit and exit with code 2
+        — this matches the explicit "configure and restart" UX requirement.
+        """
+        try:
+            data = _load_user_config()
+        except ConfigCreated as exc:
+            print(render_created_message(exc.path), file=sys.stderr)
+            raise SystemExit(2) from exc
+        except ConfigIncomplete as exc:
+            print(
+                render_incomplete_message(exc.path, exc.missing),
+                file=sys.stderr,
+            )
+            raise SystemExit(2) from exc
+
+        if not self.endpoint:
+            self.endpoint = data.get("endpoint")
+        if not self.user_uuid:
+            self.user_uuid = data.get("user_uuid")
 
     def supports_tools(self) -> bool:
         return True
@@ -431,9 +545,9 @@ class InternalLLMAgenticProvider(Provider):
         elif compact_note:
             budget_note = compact_note
 
-        max_tokens = kwargs.pop("max_tokens", 3000)
-        temperature = kwargs.pop("temperature", 0.3)
-        top_p = kwargs.pop("top_p", 0.95)
+        max_tokens = kwargs.pop("max_tokens", self._default_max_tokens or 3000)
+        temperature = kwargs.pop("temperature", self._default_temperature or 0.3)
+        top_p = kwargs.pop("top_p", self._default_top_p or 0.95)
 
         payload = {
             "data": {
@@ -519,10 +633,54 @@ class InternalLLMAgenticProvider(Provider):
 
         parsed = parse_response(raw_text)
 
+        # Auto-recovery: if the model fabricated a <vulp:tool_result> instead
+        # of emitting a <vulp:tool> call, the loop would silently end. We
+        # retry ONCE with a system reminder that pins the rule.
+        if (
+            not parsed.tool_calls
+            and any(HALLUCINATED_TOOL_RESULT in e for e in parsed.parse_errors)
+        ):
+            api_messages.append({"role": "assistant", "content": raw_text})
+            api_messages.append({
+                "role": "user",
+                "content": (
+                    "<system-reminder>\n"
+                    "You emitted a <vulp:tool_result> block. Only the harness "
+                    "produces tool results — that block was fabricated and "
+                    "discarded. The user did NOT see it.\n\n"
+                    "To actually run a tool, emit <vulp:tool name=\"...\"> "
+                    "with <vulp:arg> children. Reissue the call now using the "
+                    "correct format.\n"
+                    "</system-reminder>"
+                ),
+            })
+            payload["data"]["solicitacao"]["messages"] = api_messages
+            try:
+                resp = await self._client.post(
+                    self.endpoint, headers=headers, json=payload
+                )
+                resp.raise_for_status()
+                data = resp.json().get("data")
+                if isinstance(data, str) and data:
+                    raw_text = data
+                    parsed = parse_response(raw_text)
+            except (httpx.HTTPError, ValueError):
+                # If the retry itself fails, fall through with the original
+                # parsed result so the user at least gets the parse error.
+                pass
+
         if parsed.text:
             yield StreamChunk(type="text", delta=parsed.text)
 
+        schema_by_name = {
+            t.get("name"): t.get("input_schema", {})
+            for t in tools
+            if isinstance(t, dict)
+        }
         for tc in parsed.tool_calls:
+            schema = schema_by_name.get(tc.name)
+            if isinstance(schema, dict):
+                tc.arguments = _coerce_text_args(tc.arguments, schema)
             yield StreamChunk(type="tool_call", tool_call=tc)
 
         if parsed.parse_errors and not parsed.tool_calls:

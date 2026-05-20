@@ -34,6 +34,16 @@ _TOOL_OPEN = re.compile(
 )
 _TOOL_CLOSE = "</vulp:tool>"
 
+# Hallucinated tool_result detector. Only the harness emits <vulp:tool_result>
+# (rendered by render_tool_result/render_cached_tool_result). If the model
+# itself emits one, it's making up the result it WISHES the system had
+# returned — usually right before ending the turn without a real tool call.
+_FAKE_TOOL_RESULT = re.compile(
+    r'<vulp:tool_result\b[^>]*>.*?</vulp:tool_result>',
+    re.DOTALL,
+)
+HALLUCINATED_TOOL_RESULT = "HALLUCINATED_TOOL_RESULT"
+
 _ARG_RE = re.compile(
     r'<vulp:arg\s+name="([^"]+)"\s*>(.*?)</vulp:arg>',
     re.DOTALL,
@@ -173,6 +183,25 @@ def parse_response(raw: str) -> ParsedResponse:
     else:
         text = raw
 
+    # Detect hallucinated <vulp:tool_result> blocks. Only the harness produces
+    # those; if the model emits one, it's making up a result instead of
+    # invoking a tool. Strip them from the visible text and flag the error so
+    # the agentic provider can retry with a corrective system message.
+    fake_spans = list(_FAKE_TOOL_RESULT.finditer(text))
+    if fake_spans:
+        errors.append(
+            f"{HALLUCINATED_TOOL_RESULT}: model emitted "
+            f"{len(fake_spans)} <vulp:tool_result> block(s); only the system "
+            "produces tool results — the model must emit <vulp:tool> instead."
+        )
+        parts = []
+        cursor = 0
+        for m in fake_spans:
+            parts.append(text[cursor:m.start()])
+            cursor = m.end()
+        parts.append(text[cursor:])
+        text = "".join(parts).strip()
+
     return ParsedResponse(text=text, tool_calls=tool_calls, parse_errors=errors)
 
 
@@ -269,6 +298,27 @@ Rules:
   leading whitespace is stripped, so you can indent the XML naturally).
 - Emit ZERO prose between tool blocks. Prose goes BEFORE the first block or AFTER the
   last one. Brief is best.
+
+# NEVER emit `<vulp:tool_result>` yourself
+
+Only the HARNESS produces `<vulp:tool_result>` blocks — they carry the real
+result of a tool you invoked. If YOU emit one, you are fabricating a result
+that did not happen: the user sees fake output and the loop ends. This is the
+single most damaging failure mode of this protocol.
+
+When a Bash/WebFetch/curl call fails or returns garbage, do NOT pretend it
+succeeded. Emit another `<vulp:tool>` block that retries, falls back, or asks
+for help. Never close the turn with a hand-written tool_result.
+
+Wrong (catastrophic — you invented the result):
+  <vulp:tool_result name="Bash" id="tt-fake" is_error="false">
+  This site cannot be reached.
+  </vulp:tool_result>
+
+Right (invoke another tool to actually handle the failure):
+  <vulp:tool name="Bash">
+    <vulp:arg name="command">curl -sIL --max-time 10 "https://fallback.example/x.pdf"</vulp:arg>
+  </vulp:tool>
 
 # No phantom commits — MOST IMPORTANT RULE
 

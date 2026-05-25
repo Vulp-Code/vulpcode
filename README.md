@@ -284,6 +284,26 @@ release notes.
 
 ---
 
+## Harness
+
+Vulpcode ships an opt-in **harness** — a middleware layer that plugs into the
+agent loop via a `HookBus`. All components are disabled by default; enable
+only what you need in `~/.vulpcode/config.toml`.
+
+| Middleware       | What it does                                                            |
+| ---------------- | ----------------------------------------------------------------------- |
+| `eviction`       | Drops old message pairs when the context exceeds a message/token limit  |
+| `summarization`  | Replaces middle history with a compact summary when tokens run high     |
+| `context_hub`    | Offloads large tool outputs to disk; model receives a handle + preview  |
+| `skills`         | Loads specialist playbooks with optional tool-allow lists               |
+| `profiles`       | Named config bundles (`--profile safe`, `--profile code`)               |
+| `tool_patch`     | Per-rule `block`, `redact`, or `log_only` on tool calls before execution |
+| `vfs`            | Pluggable filesystem backends, including `jail` to confine file access  |
+
+See [docs/harness/index.md](docs/harness/index.md) for the full guide.
+
+---
+
 ## Documentation
 
 Full documentation, including detailed configuration, recipes, the API

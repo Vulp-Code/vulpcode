@@ -1,0 +1,10 @@
+description = "Safe mode: read-only tools only, no Bash. Ideal for production repo audits."
+
+system_prompt_extra = """
+You are in safe mode. You may only read and search files.
+You cannot run shell commands or modify any files.
+If the user asks you to edit or run something, explain this restriction politely.
+"""
+
+tools_allow = ["Read", "Grep", "Glob", "Tree", "HandleRead"]
+tools_deny = ["Bash", "BashOutput", "Write", "Edit", "MultiEdit"]

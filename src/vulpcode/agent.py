@@ -201,17 +201,26 @@ class Agent:
                     if self.hook_bus is not None and self._loop_state is not None:
                         hook_returns = await _emit_hooks(self.hook_bus._hooks.get("before_tool_call", []), self._loop_state, call=tc)
                         blocked = False
+                        pre_result = None
                         patched_tc = tc
                         for rv in hook_returns:
                             if rv is False:
+                                blocked = True
+                                break
+                            if isinstance(rv, ToolResult):
+                                pre_result = rv
                                 blocked = True
                                 break
                             if isinstance(rv, ToolCall):
                                 patched_tc = rv
                                 break
                         if blocked:
-                            block_msg = self._loop_state.metadata.get("last_block_message") or f"Tool {tc.name} blocked by hook"
-                            self._messages.append(Message(role="tool", tool_call_id=tc.id, name=tc.name, content=f"blocked: {block_msg}"))
+                            if pre_result is not None:
+                                content_str = pre_result.to_string()
+                            else:
+                                block_msg = self._loop_state.metadata.get("last_block_message") or f"Tool {tc.name} blocked by hook"
+                                content_str = f"blocked: {block_msg}"
+                            self._messages.append(Message(role="tool", tool_call_id=tc.id, name=tc.name, content=content_str))
                             continue
                         tc = patched_tc
                     tool_cls = type(tool_obj)

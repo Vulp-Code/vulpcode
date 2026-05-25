@@ -1,0 +1,27 @@
+description = "Code mode: full edit/write/bash with aggressive context management."
+
+system_prompt_extra = """
+You are in code mode. Prefer concrete edits over explanations.
+Use tests to validate changes. Keep responses focused and terse.
+Always use absolute paths. Run tests after significant changes.
+"""
+
+tools_allow = [
+  "Read", "Write", "Edit", "MultiEdit",
+  "Grep", "Glob", "Tree",
+  "Bash", "BashOutput",
+  "TodoWrite", "Task",
+]
+
+[middleware.summarization]
+enabled = true
+trigger_at_tokens = 60000
+
+[middleware.context_hub]
+enabled = true
+threshold_chars = 2000
+
+[middleware.eviction]
+enabled = true
+max_messages = 150
+keep_recent = 30

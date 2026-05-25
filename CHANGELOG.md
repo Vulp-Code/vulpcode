@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Harness** — opt-in middleware layer wired into the agent loop via `HookBus`:
+  - `eviction`: drop old assistant+tool pairs when message count or token budget is exceeded (`EvictionConfig`).
+  - `summarization`: auto-compact history once estimated token count exceeds `trigger_at_tokens`; respects cooldown between summarizations (`SummarizationConfig`).
+  - `context_hub`: offload large tool outputs to disk; model receives a compact header + preview + `HandleRead` instructions (`ContextHubConfig`).
+  - `skills`: load specialist playbooks from `~/.vulpcode/skills/`; each skill can restrict the available tool set via `tools_allow` (`SkillsConfig`).
+  - `profiles`: named configuration bundles (`--profile safe`, `--profile code`) stored in TOML; set system_prompt_extra, tools_allow, and middleware defaults.
+  - `tool_patch`: intercept tool calls before execution with per-rule `block`, `redact`, or `log_only` actions (`ToolPatchConfig`).
+  - `VFS` backends: `local` (default), `jail` (confines file ops to a `jail_root`), and `sandbox` stub.
+- **Safety integrations** wired into tool implementations:
+  - `Write`, `Edit`, `MultiEdit`, `_validated_write`: secret scanning via `scan_secrets()`.
+  - `Write`: sandbox path check via `check_path_sandbox()`.
+  - `Bash`: catastrophic command blocking + risky command warning via `classify_command()`.
+  - `Edit`, `MultiEdit`: post-edit revalidation via `validate_after_edit()`.
+  - `WriteToml`: `pyproject.toml` schema validation (requires `[build-system]` + version).
+  - `WritePy`: ruff lint (when ruff is available) + smoke import check.
+- `Agent` accepts `hook_bus` parameter; hooks receive a `LoopState` with `messages`, `usage`, `iteration`, and `metadata`.
+- `session.py` exports `_current_state` (ContextVar) and `skill_registry` for harness access.
+- Integration test suite (`tests/test_harness_integration/`) with 8 end-to-end scenarios and subprocess smoke tests.
+
 ## [0.2.0] - 2026-05-18
 
 ### Added

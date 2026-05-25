@@ -180,6 +180,16 @@ nav:
       - Config: api/config.md
       - Session: api/session.md
       - MCP: api/mcp.md
+  - Harness:
+      - Overview: harness/index.md
+      - Hooks: harness/hooks.md
+      - Eviction: harness/eviction.md
+      - Summarization: harness/summarization.md
+      - Context Hub: harness/context-hub.md
+      - Skills: harness/skills.md
+      - Profiles: harness/profiles.md
+      - Tool Patch: harness/tool-patch.md
+      - VFS Backends: harness/vfs.md
   - Contributing:
       - contributing/index.md
       - Setup de desenvolvimento: contributing/dev-setup.md

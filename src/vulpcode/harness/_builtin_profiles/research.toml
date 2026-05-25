@@ -1,0 +1,22 @@
+description = "Research mode: broad reading + web search, no file editing."
+
+provider = "anthropic"
+model = "claude-opus-4-7"
+
+system_prompt_extra = """
+You are in research mode. Cite sources (URL + line when possible).
+Do not edit code without explicit user confirmation.
+Prefer breadth-first exploration: read multiple files before drawing conclusions.
+"""
+
+tools_allow = ["Read", "Grep", "Glob", "Tree", "WebFetch", "WebSearch", "HandleRead"]
+
+skills_priority = ["research-citations"]
+
+[middleware.summarization]
+enabled = true
+trigger_at_tokens = 80000
+
+[middleware.context_hub]
+enabled = true
+threshold_chars = 3000
